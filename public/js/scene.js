@@ -8,6 +8,8 @@ const START = { x: 0, z: -4 };
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
 const HIP = 0.9;
+const BALL_R = 0.14;
+const SCALE = 1.14; // players are drawn a little larger than life so they read well on phones
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -66,20 +68,20 @@ function buildStadium(scene) {
   const crowd = canvasTex(1024, 256, (g, w, h) => {
     g.fillStyle = '#081629'; g.fillRect(0, 0, w, h);
     const cols = ['#38bdf8', '#7dd3fc', '#e8f3ff', '#1d4ed8', '#0f2b52', '#93c5fd', '#16365f', '#ffd9b8'];
-    for (let r = 0; r < 20; r++) for (let c = 0; c < 120; c++) {
-      if (Math.random() < 0.12) continue;
-      const x = c * 8.6 + (r % 2) * 4 + Math.random() * 2, y = r * 12.6 + 6;
+    for (let r = 0; r < 14; r++) for (let c = 0; c < 84; c++) {
+      if (Math.random() < 0.1) continue;
+      const x = c * 12.2 + (r % 2) * 6 + Math.random() * 2, y = r * 18 + 8;
       g.fillStyle = cols[(Math.random() * cols.length) | 0];
-      g.beginPath(); g.arc(x, y + 5, 3.6, 0, 7); g.fill();          // shoulders
+      g.beginPath(); g.arc(x, y + 7, 5.2, 0, 7); g.fill();          // shoulders
       g.fillStyle = Math.random() < 0.5 ? '#e9c4a0' : '#8a5a3c';
-      g.beginPath(); g.arc(x, y, 2.4, 0, 7); g.fill();              // head
+      g.beginPath(); g.arc(x, y, 3.4, 0, 7); g.fill();              // head
     }
   });
   crowd.wrapS = THREE.RepeatWrapping;
   const stand = (len, rep) => {
     const t = crowd.clone(); t.needsUpdate = true; t.repeat.set(rep, 1);
     const grp = new THREE.Group();
-    const seats = new THREE.Mesh(new THREE.PlaneGeometry(len, 26), new THREE.MeshBasicMaterial({ map: t, color: 0xb8c8dc }));
+    const seats = new THREE.Mesh(new THREE.PlaneGeometry(len, 26), new THREE.MeshBasicMaterial({ map: t, color: 0x6c7f99 }));
     seats.rotation.x = -0.55; seats.position.y = 12;
     const base = new THREE.Mesh(new THREE.BoxGeometry(len, 2.4, 1), new THREE.MeshStandardMaterial({ color: 0x0b1d36 }));
     base.position.set(0, 1.2, 6.3);
@@ -183,7 +185,7 @@ function makePlayer(kit) {
   const pivot = (parent, x, y, z) => { const p = new THREE.Group(); p.position.set(x, y, z); parent.add(p); return p; };
 
   const root = new THREE.Group();
-  const rig = pivot(root, 0, 0, 0); rig.scale.setScalar(0.92);
+  const rig = pivot(root, 0, 0, 0); rig.scale.setScalar(SCALE);
   const body = pivot(rig, 0, HIP, 0);
   add(g.torso, mats.shirt, body, 0, 0.36, 0).scale.set(1.22, 1, 0.82);
   add(g.shorts, mats.shorts, body, 0, 0.02, 0).scale.set(1.16, 1, 0.86);
@@ -358,7 +360,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       g.beginPath(); for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 - Math.PI / 2; g.lineTo(x + Math.cos(a) * 11, y + Math.sin(a) * 11); } g.fill();
     }
   });
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.115, 24, 16), new THREE.MeshStandardMaterial({ map: ballTex, roughness: 0.4 }));
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 24, 16), new THREE.MeshStandardMaterial({ map: ballTex, roughness: 0.4 }));
   ball.castShadow = true; scene.add(ball);
   let ballHolder = null;
 
@@ -372,7 +374,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   const markers = TYPES.map((type, i) => {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: badge(String(i + 1), COLORS[type]), depthTest: false, transparent: true }));
     sp.scale.set(1.25, 1.56, 1); sp.renderOrder = 10; scene.add(sp);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.72, 0.92, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.08, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2; scene.add(ring);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 3, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
     hit.userData.pick = i; scene.add(hit);
@@ -398,7 +400,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   const tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
   const wait = (d) => tween(d, () => {});
 
-  const feet = (p, d = 0.5) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, 0.115, p.pos.z + Math.cos(p.root.rotation.y) * d);
+  const feet = (p, d = 0.58) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
   const place = (p, x, z, face) => { p.pos.set(x, 0, z); p.target = null; p.onArrive = null; p.face = face; p.anim = p.rest; p.dive = 0; p.t = 0; if (face) { p.heading = Math.atan2(face.x - x, face.z - z); p.root.rotation.y = p.heading; } };
   const runTo = (p, x, z, speed, rest) => new Promise((res) => { p.speed = speed; if (rest) p.rest = rest; p.target = { x, z }; p.onArrive = res; });
 
@@ -409,7 +411,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     return tween(dur, (u) => {
       ball.position.lerpVectors(from, to, u);
       ball.position.y = lerp(from.y, to.y, u) + 4 * arc * u * (1 - u);
-      ball.rotateOnWorldAxis(axis, -((u - last) * dist) / 0.115); last = u;
+      ball.rotateOnWorldAxis(axis, -((u - last) * dist) / BALL_R); last = u;
     });
   }
 
@@ -422,9 +424,10 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     return options.map((o, i) => {
       const slot = slots[i];
       const z = Math.max(GOAL_Z + 4, c.z - Math.max(remaining * frac[o.type], slot === 0 ? 5.5 : 1.5));
-      const maxX = z < GOAL_Z + 16 ? 17 : 29;
-      let x = clamp(c.x * 0.45 + slot * (7 + o.pos * 8) + (slot === 0 ? (o.pos - 0.5) * 5 : 0), -maxX, maxX);
-      if (Math.hypot(x - c.x, z - c.z) < 5) x = clamp(c.x + (x >= c.x ? 5.5 : -5.5), -maxX, maxX);
+      const maxX = z < GOAL_Z + 16 ? 15 : 22;
+      const wide = { safe: 4.5, standard: 6.5, risky: 9 }[o.type] + o.pos * 3.5;
+      let x = clamp(c.x * 0.4 + slot * wide + (slot === 0 ? (o.pos - 0.5) * 4 : 0), -maxX, maxX);
+      if (Math.hypot(x - c.x, z - c.z) < 4.5) x = clamp(c.x + (x >= c.x ? 5 : -5), -maxX, maxX);
       return { x, z };
     });
   }
@@ -433,6 +436,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const c = carrier.pos, goalPoint = { x: c.x * 0.4, z: GOAL_Z };
     carrier.rest = 'idle'; carrier.face = goalPoint;
     const tg = targets();
+    if (!instant && c.z > BOX_Z + 3) { carrier.anim = 'run'; runTo(carrier, c.x * 0.92, c.z - 2.2, 5.5, 'idle'); } // a short dribble forward
     receivers.forEach((r, i) => {
       const t = tg[i] ?? { x: c.x + (i - 1) * 8, z: c.z - 3 };
       r.rest = options.length ? 'call' : 'idle'; r.face = c;
@@ -486,7 +490,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     sfx.kick?.();
     const from = ball.position.clone(); ballHolder = null;
     const dir = new THREE.Vector3(from.x - r.pos.x, 0, from.z - r.pos.z).normalize();
-    const to = new THREE.Vector3(r.pos.x + dir.x * 0.5, 0.115, r.pos.z + dir.z * 0.5);
+    const to = new THREE.Vector3(r.pos.x + dir.x * 0.5, BALL_R, r.pos.z + dir.z * 0.5);
     const dist = from.distanceTo(to), dur = clamp(dist / (type === 'risky' ? 17 : 21), 0.35, 1.25);
     const arc = type === 'risky' ? dist * 0.17 : type === 'standard' ? dist * 0.025 : 0;
     r.face = from;
@@ -495,6 +499,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       sfx.receive?.();
       const old = carrier;
       carrier = r; ballHolder = r;
+      r.anim = 'kick'; r.t = 0.3; // first touch
       receivers = attackers.filter((a) => a !== carrier);
       old.rest = 'idle';
       await wait(0.12);
@@ -540,14 +545,14 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       await tween(0.25, (u) => { ball.position.lerpVectors(a, b, easeOut(u)); });
       attackers.forEach((p, n) => { p.target = null; p.rest = 'celebrate'; p.anim = 'celebrate'; if (p !== carrier) runTo(p, carrier.pos.x + (n - 1.5) * 1.6, carrier.pos.z + 1.2, 8.5, 'celebrate'); });
       defenders.forEach((p) => { p.target = null; p.rest = p.anim = 'sad'; });
-      tween(1.2, (u) => { ball.position.y = Math.max(0.115, 0.3 * (1 - u)); });
+      tween(1.2, (u) => { ball.position.y = Math.max(BALL_R, 0.3 * (1 - u)); });
       await wait(1.5);
     } else {
       if (savedOrWide === 'save') {
         const hitAt = new THREE.Vector3(tx, ty, GOAL_Z + 0.9);
         await ballFly(from, hitAt, dur, dist * 0.04);
         sfx.intercept?.(); shake = 0.3;
-        await ballFly(hitAt, new THREE.Vector3(tx + side * 5, 0.115, GOAL_Z + 6), 0.7, 1.2);
+        await ballFly(hitAt, new THREE.Vector3(tx + side * 5, BALL_R, GOAL_Z + 6), 0.7, 1.2);
       } else {
         await ballFly(from, new THREE.Vector3(tx, ty, GOAL_Z - 3), dur * 1.05, dist * 0.05);
         sfx.intercept?.();
@@ -592,7 +597,9 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const w = container.clientWidth || 1, h = container.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; portrait = w / h < 0.95;
-    camera.fov = portrait ? 62 : 48;
+    camera.fov = portrait ? 60 : 46;
+    // shift the picture up so the ball carrier is not hidden behind the option cards
+    camera.setViewOffset(w, h, 0, h * (portrait ? 0.17 : 0.11), w, h);
     camera.updateProjectionMatrix();
   }
   new ResizeObserver(resize).observe(container); resize();
@@ -611,8 +618,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     }
     for (const p of everyone) { stepMove(p, dt); pose(p, dt); }
     if (ballHolder) {
-      const f = feet(ballHolder, 0.48);
-      if (ballHolder.anim === 'run') { ball.rotation.x -= dt * ballHolder.speed / 0.115; f.y += Math.abs(Math.sin(time * 14)) * 0.04; }
+      const f = feet(ballHolder, 0.58);
+      if (ballHolder.anim === 'run') { ball.rotation.x -= dt * ballHolder.speed / BALL_R; f.y += Math.abs(Math.sin(time * 14)) * 0.04; }
       ball.position.lerp(f, 1 - Math.exp(-dt * 22));
     }
     // markers
@@ -621,7 +628,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       m.sp.visible = m.ring.visible = lanes[i].visible = on;
       m.hit.position.set(r.pos.x, 1.5, r.pos.z);
       if (!on) return;
-      m.sp.position.set(r.pos.x, 2.75 + Math.sin(time * 3 + i) * 0.1, r.pos.z);
+      m.sp.position.set(r.pos.x, 3.15 + Math.sin(time * 3 + i) * 0.1, r.pos.z);
       m.ring.position.set(r.pos.x, 0.03, r.pos.z);
       m.ring.scale.setScalar(1 + Math.sin(time * 4 + i) * 0.08);
       const pa = lanes[i].geometry.attributes.position;
@@ -634,19 +641,19 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const fz = clamp(ball.position.z, GOAL_Z + 9, 4);
     focus.x += (ball.position.x * 0.8 - focus.x) * (1 - Math.exp(-dt * 2.5));
     focus.z += (fz - focus.z) * (1 - Math.exp(-dt * 2.5));
-    const back = portrait ? 22 : 15.5, up = portrait ? 15 : 9.2;
-    const want = new THREE.Vector3(focus.x * 0.75, up - zoom * 1.5, focus.z + back - zoom * 2);
-    camPos.lerp(want, 1 - Math.exp(-dt * 3));
+    const back = portrait ? 17 : 11.5, up = portrait ? 10.5 : 5.8;
+    const want = new THREE.Vector3(focus.x * 0.9, up - zoom * 1.2, focus.z + back - zoom * 2.5);
+    camPos.lerp(want, 1 - Math.exp(-dt * 3.5));
     shake = Math.max(0, shake - dt);
     camera.position.copy(camPos);
     if (shake > 0) { camera.position.x += (Math.random() - 0.5) * shake * 0.5; camera.position.y += (Math.random() - 0.5) * shake * 0.5; }
-    look.set(focus.x, 1, focus.z - (portrait ? 9 : 7));
+    look.set(camPos.x + (focus.x - camPos.x) * 0.5, 1.2, camPos.z - back - (portrait ? 9 : 8));
     camera.lookAt(look);
     sun.position.set(focus.x + 18, 42, focus.z + 14); sun.target.position.set(focus.x, 0, focus.z - 4);
     renderer.render(scene, camera);
   }
   reset(null);
-  camPos.set(0, 9.2, START.z + 15.5);
+  camPos.set(0, 5.8, START.z + 11.5);
   frame();
 
   return { reset, layout, playPass, playShot, playCashout, dispose() { running = false; renderer.dispose(); el.remove(); } };
