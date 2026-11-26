@@ -1,0 +1,14 @@
+{
+  "name": "tikitaka-game",
+  "version": "1.0.0",
+  "description": "Tiki Taka — original 3D football passing casino game",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tiki Taka</title>
+<link rel="stylesheet" href="styles.css">
+<!-- Three.js (3D engine). For production, the dev team can host this file locally and change the URL. -->
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">⚽</span><b>TIKI TAKA</b><span class="mode" id="modeTag" hidden>DEMO</span></div>
+  <div class="top-right">
+    <div class="balance"><span>Balance</span><b id="balance">0.00</b></div>
+    <button class="icon" id="soundBtn" title="Sound" aria-label="Sound">🔊</button>
+    <button class="icon" id="fairBtn" title="Provably fair" aria-label="Provably fair">🛡</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="panel" id="panel">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-mode="manual">Manual</button>
+      <button class="tab" data-mode="auto">Auto</button>
+    </div>
+
+    <label class="field">
+      <span>Bet amount</span>
+      <div class="stake">
+        <input id="stake" type="number" inputmode="decimal" min="0.1" step="0.1" value="1">
+        <button id="half" type="button">½</button>
+        <button id="double" type="button">2×</button>
+      </div>
+    </label>
+
+    <div class="field">
+      <span>Difficulty</span>
+      <div class="seg" id="difficulty">
+        <button data-d="easy">Easy</button>
+        <button data-d="medium" class="active">Medium</button>
+        <button data-d="hard">Hard</button>
+      </div>
+    </div>
+
+    <div id="autoFields" hidden>
+      <div class="field">
+        <span>Pass to play</span>
+        <div class="seg" id="autoPass">
+          <button data-p="0" class="active">Safe</button>
+          <button data-p="1">Standard</button>
+          <button data-p="2">Risky</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <label class="field"><span>Cash out after passes</span><input id="autoPasses" type="number" min="1" max="12" value="3"></label>
+        <label class="field"><span>Number of bets</span><input id="autoCount" type="number" min="0" value="10" title="0 = no limit"></label>
+        <label class="field"><span>Stop on profit</span><input id="autoProfit" type="number" min="0" value="0"></label>
+        <label class="field"><span>Stop on loss</span><input id="autoLoss" type="number" min="0" value="0"></label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="betBtn">Bet</button>
+      <button class="btn cash" id="cashBtn" disabled>Cash out</button>
+    </div>
+    <p class="hint" id="hint">Pick a pass on the pitch. Every completed pass grows your win.</p>
+  </aside>
+
+  <section class="stage" id="stage">
+    <div class="canvas-wrap" id="canvasWrap"></div>
+    <div class="hud">
+      <div class="mult"><b id="mult">1.00×</b><span id="multSub">Place your bet</span></div>
+      <div class="passes"><span>Passes</span><b id="passes">0</b></div>
+    </div>
+    <div class="banner" id="banner" hidden></div>
+    <div class="loading" id="loading">Loading stadium…</div>
+    <div class="cards" id="cards" hidden></div>
+  </section>
+</main>
+
+<section class="below">
+  <div class="tabs small">
+    <button class="tab active" data-list="bets">My bets</button>
+    <button class="tab" data-list="leaders">Leaderboard</button>
+  </div>
+  <div class="table-wrap">
+    <table id="listTable"><thead></thead><tbody></tbody></table>
+    <p class="empty" id="listEmpty">No bets yet.</p>
+  </div>
+</section>
+
+<dialog id="fairDlg">
+  <form method="dialog" class="fair">
+    <h2>Provably fair</h2>
+    <p>Every pass and shot is decided by <code>HMAC-SHA256(server seed, client seed : nonce : step : index)</code>. You see the hash of the server seed before you bet; change the seed to reveal it and verify past rounds.</p>
+    <label>Server seed (hashed)<input id="fHash" readonly></label>
+    <label>Client seed<input id="fClient" maxlength="64"></label>
+    <label>Bets made with this seed pair<input id="fNonce" readonly></label>
+    <div id="fPrev" hidden>
+      <label>Previous server seed (revealed)<input id="fPrevSeed" readonly></label>
+      <label>Previous server seed hash<input id="fPrevHash" readonly></label>
+    </div>
+    <p class="err" id="fErr"></p>
+    <div class="actions">
+      <button class="btn" type="button" id="fRotate">Change seeds</button>
+      <button class="btn primary" value="close">Close</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
