@@ -132,10 +132,10 @@ function pass(i, fromAuto) {
     const res = await api.action('pass', i);
     const ok = res.outcome === 'complete' || res.outcome === 'max';
     $('cards').hidden = true;
-    await scene.playPass(i, ok);
+    await scene.playPass(i, ok).catch(console.error);
     state = res.state;
     if (res.outcome === 'complete') { sfx.tick(); renderHud(true); scene.layout(round()); }
-    else { if (res.outcome === 'max') await scene.playCashout(); finish(res.outcome); }
+    else { if (res.outcome === 'max') await scene.playCashout().catch(console.error); finish(res.outcome); }
   });
 }
 
@@ -144,7 +144,7 @@ function shoot(fromAuto) {
   return guard(async () => {
     const res = await api.action('shoot');
     $('cards').hidden = true;
-    await scene.playShot(res.outcome === 'goal');
+    await scene.playShot(res.outcome === 'goal').catch(console.error);
     state = res.state;
     finish(res.outcome);
   });
@@ -155,7 +155,7 @@ function cashout(fromAuto) {
   return guard(async () => {
     const res = await api.action('cashout');
     $('cards').hidden = true;
-    await scene.playCashout();
+    await scene.playCashout().catch(console.error);
     state = res.state;
     finish(res.outcome);
   });

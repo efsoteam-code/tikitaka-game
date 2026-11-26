@@ -393,7 +393,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   let receivers = [attackers[1], attackers[2], attackers[3]];
   let options = [];
   const focus = new THREE.Vector3(0, 0, START.z);
-  let shake = 0, zoom = 0;
+  let shake = 0, zoom = 0, focusLock = null;
 
   /* tweens */
   const tweens = [];
@@ -440,7 +440,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     receivers.forEach((r, i) => {
       const t = tg[i] ?? { x: c.x + (i - 1) * 8, z: c.z - 3 };
       r.rest = options.length ? 'call' : 'idle'; r.face = c;
-      if (instant) place(r, t.x, t.z, c); else { r.anim = 'run'; runTo(r, t.x, t.z, 8.5 + i); }
+      if (instant) place(r, t.x, t.z, c); else { r.anim = 'run'; runTo(r, t.x, t.z, 10 + i); }
       // marker: tight on low-chance passes, far away on safe ones
       const d = defenders[i], o = options[i], ch = o ? o.chance : 0.8;
       const lx = c.x - t.x, lz = c.z - t.z, len = Math.hypot(lx, lz) || 1;
@@ -470,7 +470,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     focus.set(START.x, 0, START.z);
     markersOn = options.length > 0; shotOn = !!round?.shot;
     goal.backNet.position.z = -2; goal.backNet.scale.set(1, 1, 1);
-    zoom = 0;
+    zoom = 0; focusLock = null;
   }
 
   function layout(round) {
@@ -534,7 +534,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const tx = savedOrWide === 'wide' ? side * 5.4 : side * 2.9, ty = savedOrWide === 'wide' ? 1.6 : 0.5 + Math.random() * 1.5;
     keeper.diveSide = savedOrWide === 'goal' ? -side : side;
     keeper.diveReach = savedOrWide === 'save' ? Math.abs(tx - keeper.pos.x) - 0.3 : 2.3;
-    zoom = 1;
+    zoom = 1; focusLock = { x: carrier.pos.x * 0.45, z: Math.max(GOAL_Z + 10, lerp(carrier.pos.z, GOAL_Z, 0.45)) };
     const diveStart = savedOrWide === 'save' ? 0.35 : 0.5;
     tween(dur * (1 - diveStart) + 0.25, (u) => { keeper.dive = u; }).then(() => {});
     if (savedOrWide === 'goal') {
@@ -638,8 +638,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     shotMarker.visible = shotOn;
     shotMarker.position.y = 4.3 + Math.sin(time * 3) * 0.12;
     // camera follows the ball from behind
-    const fz = clamp(ball.position.z, GOAL_Z + 9, 4);
-    focus.x += (ball.position.x * 0.8 - focus.x) * (1 - Math.exp(-dt * 2.5));
+    const fz = focusLock ? focusLock.z : clamp(ball.position.z, GOAL_Z + 9, 4), fx = focusLock ? focusLock.x : ball.position.x * 0.8;
+    focus.x += (fx - focus.x) * (1 - Math.exp(-dt * 2.5));
     focus.z += (fz - focus.z) * (1 - Math.exp(-dt * 2.5));
     const back = portrait ? 17 : 11.5, up = portrait ? 10.5 : 5.8;
     const want = new THREE.Vector3(focus.x * 0.9, up - zoom * 1.2, focus.z + back - zoom * 2.5);
