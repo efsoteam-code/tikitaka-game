@@ -21,7 +21,7 @@ const nullScene = { reset() {}, layout() {}, playPass: () => sleep(350), playSho
 async function loadScene() {
   try {
     const { createScene } = await import('./scene.js');
-    scene = createScene($('canvasWrap'), { onPick: (p) => (p === 'shoot' ? shoot() : pass(p)), sfx });
+    scene = await createScene($('canvasWrap'), { onPick: (p) => (p === 'shoot' ? shoot() : pass(p)), sfx });
     $('loading').hidden = true;
   } catch (e) {
     console.error('Match view unavailable', e);

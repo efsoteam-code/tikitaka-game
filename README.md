@@ -39,7 +39,7 @@ npm start        # http://localhost:3000 (no dependencies to install)
 npm test         # engine tests
 ```
 
-Node 18+. The 3D engine (Three.js 0.160) is loaded from a CDN in `public/index.html` (import map) — host the file yourselves for production if you prefer.
+Node 18+. Nothing is loaded from a CDN: the 3D engine (Three.js 0.160) is in `public/vendor/three` and the models are in `public/assets`.
 
 If the page is opened without the server (static hosting), it runs in **DEMO** mode: the same engine runs in the browser with a play-money wallet.
 
@@ -49,9 +49,21 @@ If the page is opened without the server (static hosting), it runs in **DEMO** m
 shared/config.js   game settings
 shared/engine.js   all game logic + provably fair (used by server and browser)
 server/index.js    demo server: static files + API, in-memory wallet
-public/            the game: index.html, styles.css, js/main.js (UI), js/scene.js (3D), js/api.js, js/audio.js
+public/            the game: index.html, styles.css, js/main.js (UI), js/api.js, js/audio.js
+public/js/scene.js    3D match view: camera, markers, how each pass / shot plays out
+public/js/players.js  rigged player model, team kits (shader), animations
+public/js/stadium.js  pitch, stands, floodlights, goal, ball
+public/assets/     player model, hair and animation clips (CC0, see CREDITS.md)
+public/vendor/     Three.js
+tools/             build-assets.mjs — how the files in public/assets were made from the originals
 tests/             engine tests (node --test)
 ```
+
+## Match view
+
+- **Players** are one rigged character model (Quaternius, CC0) with motion clips for standing, jogging, sprinting, crouching, sliding and celebrating. Kicks, first touches, calling for the ball and the keeper's dive are layered on top in `players.js`.
+- **Kits** are painted by a shader, so a team is a few colours: change `HOME`, `AWAY` and `KEEP` at the top of `createScene` in `scene.js` (shirt, second colour, pattern `0` plain / `1` stripes / `2` hoops / `3` centre band, shorts, socks, trim, number colour).
+- **Camera** sits behind the move and pulls back just far enough to keep the carrier and every pass option between the HUD and the option cards, on any screen shape.
 
 ## Integration notes
 
