@@ -1,6 +1,6 @@
 # Tiki Taka
 
-Original 3D football passing game. Build a passing move, grow the multiplier with every completed pass, then cash out or shoot.
+Original football passing game with a flat 2D cartoon match view. Build a passing move, grow the multiplier with every completed pass, then cash out or shoot.
 
 ## How a round works
 
@@ -39,7 +39,7 @@ npm start        # http://localhost:3000 (no dependencies to install)
 npm test         # engine tests
 ```
 
-Node 18+. The 3D engine (Three.js 0.160) is loaded from a CDN in `public/index.html` (import map) — host the file yourselves for production if you prefer.
+Node 18+. No dependencies and no external files: the match view is drawn on a 2D canvas.
 
 If the page is opened without the server (static hosting), it runs in **DEMO** mode: the same engine runs in the browser with a play-money wallet.
 
@@ -49,7 +49,7 @@ If the page is opened without the server (static hosting), it runs in **DEMO** m
 shared/config.js   game settings
 shared/engine.js   all game logic + provably fair (used by server and browser)
 server/index.js    demo server: static files + API, in-memory wallet
-public/            the game: index.html, styles.css, js/main.js (UI), js/scene.js (3D), js/api.js, js/audio.js
+public/            the game: index.html, styles.css, js/main.js (UI), js/scene.js (2D match view), js/api.js, js/audio.js
 tests/             engine tests (node --test)
 ```
 

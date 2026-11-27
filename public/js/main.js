@@ -16,7 +16,7 @@ let difficulty = 'medium';
 let auto = null;         // { left, start } while auto play runs
 let list = 'bets';
 
-/* ---------- 3D scene (falls back to cards-only if WebGL / Three.js is unavailable) ---------- */
+/* ---------- match view (falls back to cards-only if the canvas cannot start) ---------- */
 const nullScene = { reset() {}, layout() {}, playPass: () => sleep(350), playShot: () => sleep(450), playCashout: () => sleep(200) };
 async function loadScene() {
   try {
@@ -24,9 +24,9 @@ async function loadScene() {
     scene = createScene($('canvasWrap'), { onPick: (p) => (p === 'shoot' ? shoot() : pass(p)), sfx });
     $('loading').hidden = true;
   } catch (e) {
-    console.error('3D scene unavailable', e);
+    console.error('Match view unavailable', e);
     scene = nullScene;
-    $('loading').textContent = '3D view could not load on this device. You can still play with the cards below.';
+    $('loading').textContent = 'The match view could not load on this device. You can still play with the cards below.';
     $('loading').style.alignItems = 'start'; $('loading').style.padding = '90px 20px'; $('loading').style.textAlign = 'center';
   }
 }
