@@ -8,7 +8,7 @@ const BOX_Z = -44;           // passes never go deeper than this (+ a little)
 const START = { x: 0, z: -4 };
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
-const HIP = 0.9;
+const HIP = 0.8;
 const BALL_R = 0.22;
 const SCALE = 1.5;  // players are drawn a little larger than life so they read well on phones
 
@@ -151,7 +151,7 @@ function buildGoal(scene) {
 // Athletic figures with real proportions (about 1.8 m): tapered limbs, a shaped torso,
 // numbered shirt with a sash, white socks and coloured boots.
 const SKINS = [0xb57d57, 0xc68e62, 0xa76c4b, 0xc08760, 0x8a5a3c, 0xe0b08a];
-const HAIRS = [0x322b28, 0x1b1410, 0x5a3d25, 0xb08a4a];
+const HAIRS = [0x322b28, 0x1b1410, 0x5a3d25, 0xd9b24a, 0xc2562a, 0x8a5a2b];
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 let G = null;
 function geos() {
@@ -213,15 +213,21 @@ function makePlayer(kit, number) {
   const root = new THREE.Group();
   const rig = pivot(root, 0, 0, 0); rig.scale.setScalar(SCALE);
   const body = pivot(rig, 0, HIP, 0);
-  add(g.torso, shirt, body, 0, 0, 0).scale.set(1.2, 1, 0.78);
-  add(g.shorts, mats.shorts, body, 0, 0, 0).scale.set(1.12, 1, 0.84);
+  add(g.torso, shirt, body, 0, 0, 0).scale.set(1.34, 1, 0.92);
+  add(g.shorts, mats.shorts, body, 0, 0, 0).scale.set(1.26, 1, 0.96);
   add(g.neck, skin, body, 0, 0.655, 0.012);
-  const head = pivot(body, 0, 0.7, 0.015); head.scale.setScalar(1.12);
+  const head = pivot(body, 0, 0.7, 0.015); head.scale.setScalar(1.32);
   add(g.head, skin, head, 0, 0.075, 0).scale.set(1, 1.27, 1.06);
-  if (Math.random() > 0.15) { const hr = add(g.hair, mats.hair, head, 0, 0.098, -0.012); hr.rotation.x = -0.32; hr.scale.set(1, 1.12, 1.06); }
+  const hr = add(g.hair, mats.hair, head, 0, 0.1, -0.014); hr.rotation.x = -0.3; hr.scale.set(1.03, 1.2, 1.1);
+  const eye = M(0x1a1410, { roughness: 0.4 });
+  for (const e of [-1, 1]) {
+    add(g.joint, eye, head, e * 0.04, 0.085, 0.108).scale.setScalar(0.016);   // eyes
+    add(g.joint, skin, head, e * 0.112, 0.07, 0.0).scale.setScalar(0.026);     // ears
+  }
+  add(g.joint, skin, head, 0, 0.055, 0.118).scale.setScalar(0.02);            // nose
 
   const arm = (side) => {
-    const sh = pivot(body, side * 0.25, 0.565, 0.01); sh.scale.set(1.18, 1, 1.18);
+    const sh = pivot(body, side * 0.28, 0.565, 0.01); sh.scale.set(1.38, 0.95, 1.38);
     ball(0.064, mats.sleeve, sh, 0, 0, 0);
     add(g.upperArm, skin, sh);
     add(g.sleeve, mats.sleeve, sh);
@@ -232,7 +238,7 @@ function makePlayer(kit, number) {
     return [sh, el];
   };
   const leg = (side) => {
-    const hip = pivot(body, side * 0.105, 0, 0); hip.scale.set(1.18, 1, 1.18);
+    const hip = pivot(body, side * 0.125, 0, 0); hip.scale.set(1.4, 0.89, 1.4); hip.rotation.z = side * 0.06; // feet apart
     add(g.thigh, skin, hip);
     add(g.thighShort, mats.shorts, hip);
     const kn = pivot(hip, 0, -0.41, 0);
@@ -256,7 +262,7 @@ function makePlayer(kit, number) {
 function pose(p, dt) {
   p.t += dt;
   const t = p.t, s0 = p.seed;
-  const T = { hipL: 0, hipR: 0, knL: 0.06, knR: 0.06, shL: 0, shR: 0, elL: -0.3, elR: -0.3, shLz: 0.1, shRz: -0.1, lean: 0, bob: 0, headX: 0, jump: 0, crouch: 0, twist: 0, sway: 0 };
+  const T = { hipL: 0, hipR: 0, knL: 0.06, knR: 0.06, shL: 0, shR: 0, elL: -0.35, elR: -0.35, shLz: 0.26, shRz: -0.26, lean: 0, bob: 0, headX: 0, jump: 0, crouch: 0, twist: 0, sway: 0 };
   let k = 14;
   switch (p.anim) {
     case 'run': {
@@ -368,7 +374,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x2b2e33);
-  const camera = new THREE.PerspectiveCamera(30, 1, 1, 600);
+  const camera = new THREE.PerspectiveCamera(36, 1, 1, 600);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x4c7a3a, 1.5));
   const sun = new THREE.DirectionalLight(0xfff6e0, 2.3);
@@ -643,7 +649,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const w = container.clientWidth || 1, h = container.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; portrait = w / h < 0.95;
-    camera.fov = 30;
+    camera.fov = 36;
     // shift the picture up so the ball carrier is not hidden behind the option cards
     camera.setViewOffset(w, h, 0, h * (portrait ? 0.13 : 0.1), w, h);
     camera.updateProjectionMatrix();
@@ -691,10 +697,10 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const follow = 1 - Math.exp(-dt * (camFast ? 8 : 2.5));
     focus.x += (fx - focus.x) * follow;
     focus.z += (fz - focus.z) * follow;
-    // steep camera looking down the pitch (about 62° from the ground), far away with a narrow lens
-    const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 1.08;
-    const D = Math.max(((portrait ? 54 : 40) * Math.sin(tilt)) / (2 * tanH), 36 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
-    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 9 + D * Math.cos(tilt));
+    // high broadcast-style camera looking down the pitch from behind the play
+    const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 0.84; // about 48° above the ground
+    const D = Math.max(((portrait ? 50 : 34) * Math.sin(tilt)) / (2 * tanH), 34 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
+    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 7 + D * Math.cos(tilt));
     if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * (camFast ? 9 : 3.5)));
     shake = Math.max(0, shake - dt);
     camera.position.copy(camPos);
