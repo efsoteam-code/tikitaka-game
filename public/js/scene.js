@@ -346,7 +346,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   const add = (x, y, z) => pts.push(x, y, z);
   function frameCamera(dt) {
     pts.length = 0;
-    let fx, fz, tilt = 0.94, minD = 22; // steep: about 54° above the ground
+    let fx, fz, tilt = 0.76, minD = 30; // about 44° above the ground
     const bottom = portrait ? 0.27 : 0.23, top = 0.07; // share of the screen covered by cards / HUD
     if (camMode === 'shot') {
       // from behind the shooter, with the whole goal in view
@@ -373,7 +373,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
       const depth = -ry * s - rz * co, up = ry * co - rz * s; // along the view direction / up the screen
       D = Math.max(D, Math.abs(rx) / (tanH * 0.9) - depth, up > 0 ? up / (tanV * (1 - 2 * top)) - depth : -up / (tanV * (1 - 2 * bottom)) - depth);
     }
-    D = Math.min(D, 170);
+    D = Math.min(D * (camMode === 'play' ? 1.3 : 1.12), 190); // stand well back from the tightest fit
     cam.D = camReady ? cam.D + (D - cam.D) * follow : D;
     camReady = true;
     shake = Math.max(0, shake - dt);

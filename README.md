@@ -63,7 +63,7 @@ tests/             engine tests (node --test)
 
 - **Players** are one rigged character model (Quaternius, CC0) with motion clips for standing, jogging, sprinting, crouching, sliding and celebrating. Kicks, first touches, calling for the ball and the keeper's dive are layered on top in `players.js`.
 - **Kits** are painted by a shader, so a team is a few colours: change `HOME`, `AWAY` and `KEEP` at the top of `createScene` in `scene.js` (shirt, second colour, pattern `0` plain / `1` stripes / `2` hoops / `3` centre band, shorts, socks, trim, number colour).
-- **Camera** looks down from high above the move (about 60°), toward the goal, and pulls back just far enough to keep the carrier and every pass option between the HUD and the option cards, on any screen shape.
+- **Camera** looks down from high above the move (about 44°), toward the goal, and pulls back just far enough to keep the carrier and every pass option between the HUD and the option cards, on any screen shape.
 
 ## Integration notes
 
