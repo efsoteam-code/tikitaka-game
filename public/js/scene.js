@@ -6,7 +6,7 @@ import { loadPlayers, updatePlayer, SCALE } from './players.js';
 import { GOAL_Z, canvasTex, buildSky, buildPitch, buildStadium, buildGoal, buildBall } from './stadium.js';
 
 const BOX_Z = -44;           // passes never go deeper than this (+ a little)
-const START = { x: 0, z: -4 };
+const START = { x: 0, z: -22 }; // the move starts 28 m from goal, just outside the box
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
 const BALL_R = 0.21;
