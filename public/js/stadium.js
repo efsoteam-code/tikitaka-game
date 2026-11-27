@@ -22,33 +22,50 @@ export function buildSky(scene) {
     gr.addColorStop(0, '#040912'); gr.addColorStop(0.55, '#0a1830'); gr.addColorStop(1, '#16325a');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  scene.fog = new THREE.Fog(0x0c1d38, 190, 460);
+  scene.fog = new THREE.Fog(0x0c1d38, 320, 700);
 }
 
 /* ---------------- Pitch ---------------- */
 export function buildPitch(scene) {
-  // tiling grass: blades of slightly different greens, drawn wrapped so the tile repeats cleanly
+  // tiling grass: a deep green base with thousands of short blades in nearby greens, drawn
+  // wrapped so the tile repeats cleanly
   const grass = canvasTex(512, 512, (g, w, h) => {
-    g.fillStyle = '#2a7a2c'; g.fillRect(0, 0, w, h);
-    const tones = ['rgba(18,70,20,.35)', 'rgba(70,160,50,.3)', 'rgba(120,190,80,.22)', 'rgba(20,90,30,.3)', 'rgba(190,220,120,.12)'];
-    for (let i = 0; i < 26000; i++) {
-      const x = Math.random() * w, y = Math.random() * h, len = 3 + Math.random() * 7, lean = (Math.random() - 0.5) * 3;
-      g.strokeStyle = tones[(Math.random() * tones.length) | 0]; g.lineWidth = 0.8 + Math.random();
-      for (const ox of [0, -w, w]) for (const oy of [0, -h, h]) { g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + lean, y + oy - len); g.stroke(); }
+    g.fillStyle = '#1f8a1c'; g.fillRect(0, 0, w, h);
+    const tones = ['rgba(8,70,10,.4)', 'rgba(40,150,30,.38)', 'rgba(90,190,50,.28)', 'rgba(14,100,20,.38)', 'rgba(150,215,80,.16)', 'rgba(4,50,8,.3)'];
+    for (let i = 0; i < 42000; i++) {
+      const x = Math.random() * w, y = Math.random() * h, len = 2 + Math.random() * 6, lean = (Math.random() - 0.5) * 3.5;
+      g.strokeStyle = tones[(Math.random() * tones.length) | 0]; g.lineWidth = 0.6 + Math.random() * 0.9;
+      for (const ox of [0, -w, w]) for (const oy of [0, -h, h]) { if (x + ox < -8 || x + ox > w + 8 || y + oy < -8 || y + oy > h + 8) continue; g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + lean, y + oy - len); g.stroke(); }
     }
   });
   grass.wrapS = grass.wrapT = THREE.RepeatWrapping; grass.anisotropy = 16;
+  const TILE = 4.5;
   const band = (x0, x1, z0, z1, color) => {
-    const t = grass.clone(); t.needsUpdate = true; t.repeat.set((x1 - x0) / 6, (z1 - z0) / 6); t.offset.set(x0 / 6, -z0 / 6);
+    const t = grass.clone(); t.needsUpdate = true; t.repeat.set((x1 - x0) / TILE, (z1 - z0) / TILE); t.offset.set(x0 / TILE, -z0 / TILE);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ map: t, color, roughness: 1 }));
     m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); m.receiveShadow = true;
     scene.add(m);
   };
   // mowing bands across the pitch, then the darker run-off around it
   const BAND = 5.5;
-  for (let i = 0, z = GOAL_Z; z < 58; i++, z += BAND) band(-TOUCH_X, TOUCH_X, z, Math.min(58, z + BAND), i % 2 ? 0xffffff : 0xd3e6cf);
+  for (let i = 0, z = GOAL_Z; z < 58; i++, z += BAND) band(-TOUCH_X, TOUCH_X, z, Math.min(58, z + BAND), i % 2 ? 0xffffff : 0xcfe6c2);
   band(-46, 46, GOAL_Z - 9, GOAL_Z, 0xb9cdb6);
   band(-46, -TOUCH_X, GOAL_Z, 58, 0xb9cdb6); band(TOUCH_X, 46, GOAL_Z, 58, 0xb9cdb6);
+  // what real turf has and a flat texture lacks: uneven growth, lighter worn areas where play
+  // is busiest (goal mouth, penalty spot, centre), and faint mower tracks along each band
+  const X0 = -46, Z0 = GOAL_Z - 9, PW = 92, PL = 58 - Z0;
+  const wear = canvasTex(1024, 1280, (g, w, h) => {
+    const px = (x) => ((x - X0) / PW) * w, pz = (z) => ((z - Z0) / PL) * h;
+    const blot = (x, y, r, c) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, c); gr.addColorStop(1, c.replace(/[\d.]+\)$/, '0)')); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); };
+    for (let i = 0; i < 260; i++) blot(Math.random() * w, Math.random() * h, 30 + Math.random() * 120, Math.random() < 0.5 ? 'rgba(0,40,0,0.10)' : 'rgba(150,220,70,0.07)');
+    for (let i = 0; i < 1400; i++) blot(Math.random() * w, Math.random() * h, 4 + Math.random() * 14, Math.random() < 0.6 ? 'rgba(0,45,0,0.08)' : 'rgba(190,225,110,0.06)');
+    g.fillStyle = 'rgba(0,30,0,0.035)'; for (let z = GOAL_Z; z < 58; z += 0.9) g.fillRect(px(-TOUCH_X), pz(z), px(TOUCH_X) - px(-TOUCH_X), 1.2);
+    blot(px(0), pz(GOAL_Z + 2.5), 70, 'rgba(205,200,120,0.20)'); blot(px(0), pz(GOAL_Z + 11), 26, 'rgba(205,200,120,0.18)');
+    blot(px(0), pz(HALF_Z), 60, 'rgba(200,205,120,0.12)');
+    for (let i = 0; i < 40; i++) blot(px((Math.random() - 0.5) * 30), pz(GOAL_Z + Math.random() * 18), 10 + Math.random() * 26, 'rgba(200,205,120,0.05)');
+  });
+  const wearMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PL), new THREE.MeshBasicMaterial({ map: wear, transparent: true, depthWrite: false }));
+  wearMesh.rotation.x = -Math.PI / 2; wearMesh.position.set(X0 + PW / 2, 0.003, Z0 + PL / 2); scene.add(wearMesh);
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ color: 0x1a2129, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.05, 0); scene.add(ground);
 

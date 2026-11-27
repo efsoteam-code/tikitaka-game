@@ -28,7 +28,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 600);
+  const camera = new THREE.PerspectiveCamera(38, 1, 1, 900);
   buildSky(scene);
 
   // floodlights: a cool wash, one shadow-casting key light and a rim light from the far side
@@ -347,33 +347,45 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   function frameCamera(dt) {
     pts.length = 0;
     let fx, fz, tilt = 0.76, minD = 30; // about 44° above the ground
-    const bottom = portrait ? 0.27 : 0.23, top = 0.07; // share of the screen covered by cards / HUD
+    const bottom = portrait ? 0.37 : 0.23, top = portrait ? 0.1 : 0.07; // share of the screen covered by cards / HUD
     if (camMode === 'shot') {
       // from behind the shooter, with the whole goal in view
       add(ball.position.x, ball.position.y, ball.position.z); add(-4.6, 0, GOAL_Z); add(4.6, 3.4, GOAL_Z); add(carrier.pos.x, 0, carrier.pos.z + 1); add(carrier.pos.x, 2.6, carrier.pos.z);
-      fx = carrier.pos.x * 0.5; fz = (carrier.pos.z + GOAL_Z) / 2; tilt -= 0.16; minD = 22;
+      fx = carrier.pos.x * 0.5; fz = (carrier.pos.z + GOAL_Z) / 2; tilt -= 0.1; minD = 40;
     } else if (camMode === 'party') {
       let sx = 0, sz = 0;
       attackers.forEach((p) => { add(p.pos.x, 0, p.pos.z); add(p.pos.x, 3.2, p.pos.z); sx += p.pos.x; sz += p.pos.z; });
-      fx = sx / 4; fz = sz / 4; tilt -= 0.12; minD = 20;
+      fx = sx / 4; fz = sz / 4; tilt -= 0.06; minD = 44;
     } else {
+      // the carrier, every option, and the goal with its keeper are always in view
       const c = carrier.pos;
       add(c.x, 0, c.z + 1.2); add(c.x, 3.1, c.z);
-      let sx = c.x, n = 1;
       const half = portrait ? 2.8 : 2.2; // room for the badge above each receiver
-      receivers.forEach((r) => { add(r.pos.x - half, 0, r.pos.z); add(r.pos.x + half, 5.4, r.pos.z); sx += r.pos.x; n++; });
-      fx = sx / n; fz = c.z - 4;
+      receivers.forEach((r) => { add(r.pos.x - half, 0, r.pos.z); add(r.pos.x + half, 5.4, r.pos.z); });
+      add(-5.5, 0, GOAL_Z - 1); add(5.5, 4.2, GOAL_Z - 1); add(keeper.pos.x, 3.1, keeper.pos.z);
+      add(START.x - 6, 0, START.z + 2.5); add(START.x + 6, 0, START.z + 2.5); // framed from the kick-off spot, so the view stays far for the whole move
+      fx = c.x * 0.25; fz = null; // the aim point up the pitch is chosen below, where the view is tightest
+    }
+    // how far back the camera must be, aimed at (x, z), for every point to fit
+    const fit = (x, z, t) => {
+      const s = Math.sin(t), co = Math.cos(t);
+      let D = 0;
+      for (let i = 0; i < pts.length; i += 3) {
+        const rx = pts[i] - x, ry = pts[i + 1], rz = pts[i + 2] - z;
+        const depth = -ry * s - rz * co, up = ry * co - rz * s; // along the view direction / up the screen
+        D = Math.max(D, Math.abs(rx) / (tanH * 0.9) - depth, up > 0 ? up / (tanV * (1 - 2 * top)) - depth : -up / (tanV * (1 - 2 * bottom)) - depth);
+      }
+      return D;
+    };
+    if (fz === null) { // slide the aim point along the pitch to the spot that needs the least distance
+      let best = Infinity;
+      for (let z = GOAL_Z + 4; z <= START.z + 6; z += 1.5) { const d = fit(fx, z, tilt); if (d < best) { best = d; fz = z; } }
     }
     const follow = camMode === 'hold' ? 0 : 1 - Math.exp(-dt * (camFast ? 7 : 2.6)); // 'hold': stay where we are
     if (!camReady) { cam.x = fx; cam.z = fz; cam.tilt = tilt; } else { cam.x += (fx - cam.x) * follow; cam.z += (fz - cam.z) * follow; cam.tilt += (tilt - cam.tilt) * follow; }
     const s = Math.sin(cam.tilt), co = Math.cos(cam.tilt);
-    let D = minD;
-    for (let i = 0; i < pts.length; i += 3) {
-      const rx = pts[i] - cam.x, ry = pts[i + 1], rz = pts[i + 2] - cam.z;
-      const depth = -ry * s - rz * co, up = ry * co - rz * s; // along the view direction / up the screen
-      D = Math.max(D, Math.abs(rx) / (tanH * 0.9) - depth, up > 0 ? up / (tanV * (1 - 2 * top)) - depth : -up / (tanV * (1 - 2 * bottom)) - depth);
-    }
-    D = Math.min(D * (camMode === 'play' ? 1.3 : 1.12), 190); // stand well back from the tightest fit
+    let D = Math.max(minD, fit(cam.x, cam.z, cam.tilt));
+    D = Math.min(D * 1.03, 320);
     cam.D = camReady ? cam.D + (D - cam.D) * follow : D;
     camReady = true;
     shake = Math.max(0, shake - dt);
