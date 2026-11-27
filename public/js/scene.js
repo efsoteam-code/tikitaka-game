@@ -699,7 +699,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     focus.z += (fz - focus.z) * follow;
     // high broadcast-style camera looking down the pitch from behind the play
     const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 0.84; // about 48° above the ground
-    const D = Math.max(((portrait ? 50 : 34) * Math.sin(tilt)) / (2 * tanH), 34 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
+    const D = Math.max(((portrait ? 66 : 48) * Math.sin(tilt)) / (2 * tanH), 40 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
     const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 7 + D * Math.cos(tilt));
     if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * (camFast ? 9 : 3.5)));
     shake = Math.max(0, shake - dt);
