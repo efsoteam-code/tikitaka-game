@@ -282,8 +282,8 @@ function pose(p, dt) {
       break;
     case 'guard': { // defender jockeying
       const w = Math.sin(t * 3.4 + s0);
-      T.crouch = 0.1; T.hipL = -0.36 + w * 0.1; T.hipR = -0.36 - w * 0.1; T.knL = 0.7 + w * 0.12; T.knR = 0.7 - w * 0.12; T.lean = 0.24;
-      T.shLz = 0.62; T.shRz = -0.62; T.elL = T.elR = -0.85; T.sway = w * 0.05; T.bob = Math.abs(w) * 0.02;
+      T.crouch = 0.04; T.hipL = -0.16 + w * 0.08; T.hipR = -0.16 - w * 0.08; T.knL = 0.32 + w * 0.1; T.knR = 0.32 - w * 0.1; T.lean = 0.07; // upright, light on the feet
+      T.shLz = 0.42; T.shRz = -0.42; T.elL = T.elR = -0.6; T.sway = w * 0.05; T.bob = Math.abs(w) * 0.02;
       break;
     }
     case 'kick': {
