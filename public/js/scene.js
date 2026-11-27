@@ -1,5 +1,5 @@
 // Tiki Taka — 3D match view (Three.js): floodlit stadium, rigged players in team kits,
-// a camera that sits behind the move and keeps every pass option in frame.
+// a high, steep camera that keeps every pass option in frame.
 // The scene only shows what the engine decided: it never decides an outcome.
 import * as THREE from 'three';
 import { loadPlayers, updatePlayer, SCALE } from './players.js';
@@ -9,7 +9,7 @@ const BOX_Z = -44;           // passes never go deeper than this (+ a little)
 const START = { x: 0, z: -4 };
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
-const BALL_R = 0.17;
+const BALL_R = 0.21;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -94,11 +94,11 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   const markers = TYPES.map((type, i) => {
     const badge = makeBadge(COLORS[type]);
     const ring = new THREE.Mesh(flatGeo, new THREE.MeshBasicMaterial({ map: ringTex, color: COLORS[type], transparent: true, depthWrite: false, fog: false }));
-    ring.scale.set(3.6, 1, 3.6); ring.renderOrder = 2; scene.add(ring);
+    ring.scale.set(4, 1, 4); ring.renderOrder = 2; scene.add(ring);
     const tex = chevronTex.clone(); tex.needsUpdate = true;
     const lane = new THREE.Mesh(flatGeo, new THREE.MeshBasicMaterial({ map: tex, color: COLORS[type], transparent: true, opacity: 0.8, depthWrite: false, fog: false }));
     lane.renderOrder = 1; scene.add(lane);
-    const hit = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 5.5, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+    const hit = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 6, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
     hit.userData.pick = i; scene.add(hit);
     return { badge, ring, lane, tex, hit };
   });
@@ -109,7 +109,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   shotHit.position.set(0, 2.8, GOAL_Z - 0.5); shotHit.userData.pick = 'shoot'; scene.add(shotHit);
   // ring under the player on the ball
   const halo = new THREE.Mesh(flatGeo, new THREE.MeshBasicMaterial({ map: ringTex, color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false, fog: false }));
-  halo.scale.set(2.6, 1, 2.6); halo.renderOrder = 2; scene.add(halo);
+  halo.scale.set(3.2, 1, 3.2); halo.renderOrder = 2; scene.add(halo);
   let markersOn = false, shotOn = false;
 
   /* ---------- state ---------- */
@@ -123,7 +123,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   const tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
   const wait = (d) => tween(d, () => {});
 
-  const feet = (p, d = 0.75) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
+  const feet = (p, d = 0.9) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
   const place = (p, x, z, face) => { p.pos.set(x, 0, z); p.target = null; p.onArrive = null; p.slideWithin = 0; p.face = face; p.anim = p.rest; p.dive = 0; p.t = 0; if (face) { p.heading = Math.atan2(face.x - x, face.z - z); p.root.rotation.y = p.heading; } };
   const runTo = (p, x, z, speed, rest) => new Promise((res) => { p.speed = speed; if (rest) p.rest = rest; p.target = { x, z }; p.onArrive = res; });
   const setAnim = (p, anim, rest = anim) => { p.target = null; p.onArrive = null; p.anim = anim; p.rest = rest; p.t = 0; };
@@ -326,7 +326,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   el.addEventListener('pointermove', (e) => { el.style.cursor = pickAt(e) !== null ? 'pointer' : 'default'; });
 
   /* ---------- camera ---------- */
-  // Sits behind the move looking up the pitch. Each frame it works out how far back it must
+  // High above the move, looking down and up the pitch toward the goal. Each frame it works out how far back it must
   // be so that everything that matters (carrier, receivers and their badges, the ball) fits
   // between the HUD at the top and the option cards at the bottom, on any screen shape.
   let portrait = false, tanV = 0.34, tanH = 0.5;
@@ -334,7 +334,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
     const w = container.clientWidth || 1, h = container.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; portrait = w / h < 0.95;
-    camera.fov = portrait ? 46 : 38;
+    camera.fov = portrait ? 34 : 30; // narrow lens keeps the pitch flat and the players upright
     camera.updateProjectionMatrix();
     tanV = Math.tan((camera.fov * Math.PI) / 360); tanH = tanV * camera.aspect;
   }
@@ -346,22 +346,22 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   const add = (x, y, z) => pts.push(x, y, z);
   function frameCamera(dt) {
     pts.length = 0;
-    let fx, fz, tilt = portrait ? 0.5 : 0.36, minD = 14;
+    let fx, fz, tilt = 0.94, minD = 22; // steep: about 54° above the ground
     const bottom = portrait ? 0.27 : 0.23, top = 0.07; // share of the screen covered by cards / HUD
     if (camMode === 'shot') {
       // from behind the shooter, with the whole goal in view
       add(ball.position.x, ball.position.y, ball.position.z); add(-4.6, 0, GOAL_Z); add(4.6, 3.4, GOAL_Z); add(carrier.pos.x, 0, carrier.pos.z + 1); add(carrier.pos.x, 2.6, carrier.pos.z);
-      fx = carrier.pos.x * 0.5; fz = (carrier.pos.z + GOAL_Z) / 2; tilt -= 0.08; minD = 16;
+      fx = carrier.pos.x * 0.5; fz = (carrier.pos.z + GOAL_Z) / 2; tilt -= 0.16; minD = 22;
     } else if (camMode === 'party') {
       let sx = 0, sz = 0;
       attackers.forEach((p) => { add(p.pos.x, 0, p.pos.z); add(p.pos.x, 3.2, p.pos.z); sx += p.pos.x; sz += p.pos.z; });
-      fx = sx / 4; fz = sz / 4; tilt -= 0.1; minD = 12;
+      fx = sx / 4; fz = sz / 4; tilt -= 0.12; minD = 20;
     } else {
       const c = carrier.pos;
-      add(c.x, 0, c.z + 1.2); add(c.x, 2.6, c.z);
+      add(c.x, 0, c.z + 1.2); add(c.x, 3.1, c.z);
       let sx = c.x, n = 1;
-      const half = portrait ? 3.6 : 2.4; // room for the badge above each receiver
-      receivers.forEach((r) => { add(r.pos.x - half, 0, r.pos.z); add(r.pos.x + half, 5.2, r.pos.z); sx += r.pos.x; n++; });
+      const half = portrait ? 2.8 : 2.2; // room for the badge above each receiver
+      receivers.forEach((r) => { add(r.pos.x - half, 0, r.pos.z); add(r.pos.x + half, 5.4, r.pos.z); sx += r.pos.x; n++; });
       fx = sx / n; fz = c.z - 4;
     }
     const follow = camMode === 'hold' ? 0 : 1 - Math.exp(-dt * (camFast ? 7 : 2.6)); // 'hold': stay where we are
@@ -373,7 +373,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
       const depth = -ry * s - rz * co, up = ry * co - rz * s; // along the view direction / up the screen
       D = Math.max(D, Math.abs(rx) / (tanH * 0.9) - depth, up > 0 ? up / (tanV * (1 - 2 * top)) - depth : -up / (tanV * (1 - 2 * bottom)) - depth);
     }
-    D = Math.min(D, 85);
+    D = Math.min(D, 170);
     cam.D = camReady ? cam.D + (D - cam.D) * follow : D;
     camReady = true;
     shake = Math.max(0, shake - dt);
@@ -408,13 +408,13 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
     markers.forEach((m, i) => {
       const r = receivers[i], on = markersOn && !!options[i];
       m.badge.sp.visible = m.ring.visible = m.lane.visible = on;
-      m.hit.position.set(r.pos.x, 2.7, r.pos.z);
+      m.hit.position.set(r.pos.x, 3, r.pos.z);
       if (!on) return;
-      const k = camDist(r.pos) * (portrait ? 0.075 : 0.058);
+      const k = camDist(r.pos) * (portrait ? 0.052 : 0.042);
       m.badge.sp.scale.set(k * 1.6, k, 1);
-      m.badge.sp.position.set(r.pos.x, 2.75 + Math.sin(time * 3 + i) * 0.1, r.pos.z);
+      m.badge.sp.position.set(r.pos.x, 3.3 + Math.sin(time * 3 + i) * 0.1, r.pos.z);
       m.ring.position.set(r.pos.x, 0.03, r.pos.z);
-      m.ring.scale.setScalar(3.6 * (1 + Math.sin(time * 4 + i) * 0.07));
+      m.ring.scale.setScalar(4 * (1 + Math.sin(time * 4 + i) * 0.07));
       const dx = r.pos.x - ball.position.x, dz = r.pos.z - ball.position.z, len = Math.hypot(dx, dz), gap = 1.7, l = Math.max(0.01, len - gap * 2);
       m.lane.position.set(ball.position.x + dx / 2, 0.025, ball.position.z + dz / 2);
       m.lane.rotation.y = Math.atan2(-dx, -dz);
@@ -428,7 +428,7 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
       ndc.set(0, 2.9 + Math.sin(time * 3) * 0.1, GOAL_Z).project(camera);
       ndc.y = Math.min(ndc.y, portrait ? 0.58 : 0.74); ndc.x = clamp(ndc.x, -0.6, 0.6);
       shotBadge.sp.position.copy(ndc.unproject(camera));
-      const k = camDist(shotBadge.sp.position) * (portrait ? 0.075 : 0.058);
+      const k = camDist(shotBadge.sp.position) * (portrait ? 0.052 : 0.042);
       shotBadge.sp.scale.set(k * 1.6, k, 1);
       shotGlow.material.opacity = 0.14 + Math.sin(time * 4) * 0.07;
     }

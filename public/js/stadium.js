@@ -22,7 +22,7 @@ export function buildSky(scene) {
     gr.addColorStop(0, '#040912'); gr.addColorStop(0.55, '#0a1830'); gr.addColorStop(1, '#16325a');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  scene.fog = new THREE.Fog(0x0c1d38, 110, 300);
+  scene.fog = new THREE.Fog(0x0c1d38, 190, 460);
 }
 
 /* ---------------- Pitch ---------------- */
