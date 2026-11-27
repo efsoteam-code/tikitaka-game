@@ -9,8 +9,8 @@ const START = { x: 0, z: -4 };
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
 const HIP = 0.9;
-const BALL_R = 0.2;
-const SCALE = 1.5;  // players are drawn a little larger than life so they read well on phones
+const BALL_R = 0.25;
+const SCALE = 1.9;  // players are drawn a little larger than life so they read well on phones
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -414,8 +414,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   });
   const markers = TYPES.map((type, i) => {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: badge(String(i + 1), COLORS[type]), depthTest: false, transparent: true }));
-    sp.scale.set(2.5, 3.1, 1); sp.center.set(0.2, 0); sp.renderOrder = 10; scene.add(sp);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.55, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
+    sp.scale.set(1.9, 2.37, 1); sp.center.set(0.2, 0); sp.renderOrder = 10; scene.add(sp);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.4, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2; scene.add(ring);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 4.5, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
     hit.userData.pick = i; scene.add(hit);
@@ -428,7 +428,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   const laneGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
   const lanes = TYPES.map((type) => { const l = new THREE.Line(laneGeo.clone(), new THREE.LineDashedMaterial({ color: COLORS[type], dashSize: 0.5, gapSize: 0.4, transparent: true, opacity: 0.75 })); l.frustumCulled = false; scene.add(l); return l; });
   // soft highlight under the ball while one of our players has it
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(1.25, 36), new THREE.MeshBasicMaterial({ color: 0x9dff7a, transparent: true, opacity: 0.3, depthWrite: false }));
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(1.4, 36), new THREE.MeshBasicMaterial({ color: 0x9dff7a, transparent: true, opacity: 0.3, depthWrite: false }));
   halo.rotation.x = -Math.PI / 2; scene.add(halo);
   let markersOn = false, shotOn = false;
 
@@ -444,7 +444,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   const tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
   const wait = (d) => tween(d, () => {});
 
-  const feet = (p, d = 0.8) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
+  const feet = (p, d = 1.0) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
   const place = (p, x, z, face) => { p.pos.set(x, 0, z); p.target = null; p.onArrive = null; p.face = face; p.anim = p.rest; p.dive = 0; p.t = 0; if (face) { p.heading = Math.atan2(face.x - x, face.z - z); p.root.rotation.y = p.heading; } };
   const runTo = (p, x, z, speed, rest) => new Promise((res) => { p.speed = speed; if (rest) p.rest = rest; p.target = { x, z }; p.onArrive = res; });
 
@@ -464,12 +464,12 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const c = carrier.pos, remaining = Math.max(0, c.z - BOX_Z);
     const perms = [[-1, 0, 1], [1, 0, -1], [0, -1, 1], [0, 1, -1], [-1, 1, 0], [1, -1, 0]];
     const slots = perms[Math.floor((options[0]?.pos ?? 0) * 6) % 6];
-    const frac = { safe: 0.12, standard: 0.22, risky: 0.34 };
+    const frac = { safe: 0.1, standard: 0.17, risky: 0.26 };
     return options.map((o, i) => {
       const slot = slots[i];
       const z = Math.max(GOAL_Z + 4, c.z - Math.max(remaining * frac[o.type], slot === 0 ? 5.5 : 1.5));
-      const maxX = z < GOAL_Z + 16 ? 15 : 22;
-      const wide = { safe: 4.5, standard: 6.5, risky: 9 }[o.type] + o.pos * 3.5;
+      const maxX = z < GOAL_Z + 16 ? 13 : 16;
+      const wide = { safe: 4, standard: 5.5, risky: 7.5 }[o.type] + o.pos * 3;
       let x = clamp(c.x * 0.4 + slot * wide + (slot === 0 ? (o.pos - 0.5) * 4 : 0), -maxX, maxX);
       if (Math.hypot(x - c.x, z - c.z) < 4.5) x = clamp(c.x + (x >= c.x ? 5 : -5), -maxX, maxX);
       return { x, z };
@@ -488,7 +488,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       // marker: tight on low-chance passes, far away on safe ones
       const d = defenders[i], o = options[i], ch = o ? o.chance : 0.8;
       const lx = c.x - t.x, lz = c.z - t.z, len = Math.hypot(lx, lz) || 1;
-      const gap = 1.3 + ch * 5.5, off = ch * 3.4 - 0.5, side = i % 2 ? 1 : -1;
+      const gap = 2 + ch * 4.5, off = ch * 3.4 - 0.5, side = i % 2 ? 1 : -1;
       const dx = t.x + (lx / len) * gap + (-lz / len) * off * side, dz = t.z + (lz / len) * gap + (lx / len) * off * side;
       d.rest = 'guard'; d.face = c;
       if (instant) place(d, dx, dz, c); else runTo(d, dx, dz, 7.5);
@@ -663,7 +663,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     }
     for (const p of everyone) { stepMove(p, dt); pose(p, dt); }
     if (ballHolder) {
-      const f = feet(ballHolder, 0.8);
+      const f = feet(ballHolder, 1.0);
       if (ballHolder.anim === 'run') { ball.rotation.x -= dt * ballHolder.speed / BALL_R; f.y += Math.abs(Math.sin(time * 14)) * 0.04; }
       ball.position.lerp(f, 1 - Math.exp(-dt * 22));
     }
@@ -673,7 +673,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       m.sp.visible = m.ring.visible = lanes[i].visible = on;
       m.hit.position.set(r.pos.x, 2.2, r.pos.z);
       if (!on) return;
-      m.sp.position.set(r.pos.x + 0.5, 3.4 + Math.sin(time * 3 + i) * 0.12, r.pos.z);
+      m.sp.position.set(r.pos.x + 0.5, 4.2 + Math.sin(time * 3 + i) * 0.12, r.pos.z);
       m.ring.position.set(r.pos.x, 0.03, r.pos.z);
       m.ring.scale.setScalar(1 + Math.sin(time * 4 + i) * 0.08);
       const pa = lanes[i].geometry.attributes.position;
@@ -690,8 +690,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     focus.z += (fz - focus.z) * (1 - Math.exp(-dt * 2.5));
     // steep camera looking down the pitch (about 62° from the ground), far away with a narrow lens
     const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 1.08;
-    const D = Math.max(((portrait ? 36 : 27) * Math.sin(tilt)) / (2 * tanH), 33 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
-    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 4 + D * Math.cos(tilt));
+    const D = Math.max(((portrait ? 30 : 21) * Math.sin(tilt)) / (2 * tanH), 26 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
+    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 5 + D * Math.cos(tilt));
     if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * 3.5));
     shake = Math.max(0, shake - dt);
     camera.position.copy(camPos);
