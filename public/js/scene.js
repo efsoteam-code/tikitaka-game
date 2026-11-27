@@ -84,7 +84,7 @@ function buildStadium(scene) {
         if (c % 10 === 9) { g.fillStyle = '#9aa1ab'; g.fillRect(c * cw + 2, r * rh, cw - 4, rh - 4); continue; } // stairs
         if (Math.random() < 0.06) continue;
         const x = c * cw + cw / 2 + (Math.random() - 0.5) * 3, y = r * rh + rh * 0.62;
-        g.fillStyle = shirts[(Math.random() * shirts.length) | 0]; g.fillRect(x - 9, y - 5, 18, 19);
+        g.fillStyle = shirts[(Math.random() * shirts.length) | 0]; g.beginPath(); g.ellipse(x, y + 5, 9.5, 11, 0, 0, 7); g.fill();
         g.fillStyle = skins[(Math.random() * skins.length) | 0]; g.beginPath(); g.arc(x, y - 11, 6.5, 0, 7); g.fill();
         g.fillStyle = Math.random() < 0.5 ? '#2a1a10' : '#6b4a2a'; g.beginPath(); g.arc(x, y - 13, 6.3, Math.PI, 0); g.fill();
       }
