@@ -9,8 +9,8 @@ const START = { x: 0, z: -4 };
 const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
 const TYPES = ['safe', 'standard', 'risky'];
 const HIP = 0.9;
-const BALL_R = 0.25;
-const SCALE = 1.9;  // players are drawn a little larger than life so they read well on phones
+const BALL_R = 0.22;
+const SCALE = 1.5;  // players are drawn a little larger than life so they read well on phones
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -213,15 +213,15 @@ function makePlayer(kit, number) {
   const root = new THREE.Group();
   const rig = pivot(root, 0, 0, 0); rig.scale.setScalar(SCALE);
   const body = pivot(rig, 0, HIP, 0);
-  add(g.torso, shirt, body, 0, 0, 0).scale.set(1.3, 1, 0.86);
-  add(g.shorts, mats.shorts, body, 0, 0, 0).scale.set(1.24, 1, 0.92);
+  add(g.torso, shirt, body, 0, 0, 0).scale.set(1.2, 1, 0.78);
+  add(g.shorts, mats.shorts, body, 0, 0, 0).scale.set(1.12, 1, 0.84);
   add(g.neck, skin, body, 0, 0.655, 0.012);
-  const head = pivot(body, 0, 0.7, 0.015); head.scale.setScalar(1.5); // big heads read well from above
+  const head = pivot(body, 0, 0.7, 0.015); head.scale.setScalar(1.12);
   add(g.head, skin, head, 0, 0.075, 0).scale.set(1, 1.27, 1.06);
   if (Math.random() > 0.15) { const hr = add(g.hair, mats.hair, head, 0, 0.098, -0.012); hr.rotation.x = -0.32; hr.scale.set(1, 1.12, 1.06); }
 
   const arm = (side) => {
-    const sh = pivot(body, side * 0.272, 0.565, 0.01); sh.scale.set(1.35, 1, 1.35);
+    const sh = pivot(body, side * 0.25, 0.565, 0.01); sh.scale.set(1.18, 1, 1.18);
     ball(0.064, mats.sleeve, sh, 0, 0, 0);
     add(g.upperArm, skin, sh);
     add(g.sleeve, mats.sleeve, sh);
@@ -232,7 +232,7 @@ function makePlayer(kit, number) {
     return [sh, el];
   };
   const leg = (side) => {
-    const hip = pivot(body, side * 0.118, 0, 0); hip.scale.set(1.35, 1, 1.35);
+    const hip = pivot(body, side * 0.105, 0, 0); hip.scale.set(1.18, 1, 1.18);
     add(g.thigh, skin, hip);
     add(g.thighShort, mats.shorts, hip);
     const kn = pivot(hip, 0, -0.41, 0);
@@ -373,8 +373,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   scene.add(new THREE.HemisphereLight(0xffffff, 0x4c7a3a, 1.5));
   const sun = new THREE.DirectionalLight(0xfff6e0, 2.3);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 160 });
+  sun.shadow.mapSize.set(4096, 4096);
+  Object.assign(sun.shadow.camera, { left: -52, right: 52, top: 52, bottom: -52, near: 1, far: 200 });
   sun.shadow.bias = -0.0005;
   sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun, sun.target);
@@ -414,15 +414,15 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   });
   const markers = TYPES.map((type, i) => {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: badge(String(i + 1), COLORS[type]), depthTest: false, transparent: true }));
-    sp.scale.set(1.9, 2.37, 1); sp.center.set(0.2, 0); sp.renderOrder = 10; scene.add(sp);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.4, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
+    sp.scale.set(2.5, 3.1, 1); sp.center.set(0.2, 0); sp.renderOrder = 10; scene.add(sp);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.3, 1.6, 40), new THREE.MeshBasicMaterial({ color: COLORS[type], transparent: true, opacity: 0.9, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2; scene.add(ring);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 4.5, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
     hit.userData.pick = i; scene.add(hit);
     return { sp, ring, hit };
   });
   const shotMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: badge('⚽', COLORS.shot), depthTest: false, transparent: true }));
-  shotMarker.scale.set(3.2, 4, 1); shotMarker.center.set(0.2, 0); shotMarker.position.set(0, 3.2, GOAL_Z); shotMarker.renderOrder = 10; scene.add(shotMarker);
+  shotMarker.scale.set(3.6, 4.5, 1); shotMarker.center.set(0.2, 0); shotMarker.position.set(0, 3.2, GOAL_Z); shotMarker.renderOrder = 10; scene.add(shotMarker);
   const shotHit = new THREE.Mesh(new THREE.BoxGeometry(9.5, 5, 5), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
   shotHit.position.set(0, 2.3, GOAL_Z - 0.5); shotHit.userData.pick = 'shoot'; scene.add(shotHit);
   const laneGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
@@ -444,7 +444,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   const tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
   const wait = (d) => tween(d, () => {});
 
-  const feet = (p, d = 1.0) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
+  const feet = (p, d = 0.8) => new THREE.Vector3(p.pos.x + Math.sin(p.root.rotation.y) * d, BALL_R, p.pos.z + Math.cos(p.root.rotation.y) * d);
   const place = (p, x, z, face) => { p.pos.set(x, 0, z); p.target = null; p.onArrive = null; p.face = face; p.anim = p.rest; p.dive = 0; p.t = 0; if (face) { p.heading = Math.atan2(face.x - x, face.z - z); p.root.rotation.y = p.heading; } };
   const runTo = (p, x, z, speed, rest) => new Promise((res) => { p.speed = speed; if (rest) p.rest = rest; p.target = { x, z }; p.onArrive = res; });
 
@@ -464,12 +464,12 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const c = carrier.pos, remaining = Math.max(0, c.z - BOX_Z);
     const perms = [[-1, 0, 1], [1, 0, -1], [0, -1, 1], [0, 1, -1], [-1, 1, 0], [1, -1, 0]];
     const slots = perms[Math.floor((options[0]?.pos ?? 0) * 6) % 6];
-    const frac = { safe: 0.1, standard: 0.17, risky: 0.26 };
+    const frac = { safe: 0.12, standard: 0.22, risky: 0.36 };
     return options.map((o, i) => {
       const slot = slots[i];
       const z = Math.max(GOAL_Z + 4, c.z - Math.max(remaining * frac[o.type], slot === 0 ? 5.5 : 1.5));
-      const maxX = z < GOAL_Z + 16 ? 13 : 16;
-      const wide = { safe: 4, standard: 5.5, risky: 7.5 }[o.type] + o.pos * 3;
+      const maxX = z < GOAL_Z + 16 ? 15 : 22;
+      const wide = { safe: 5, standard: 7.5, risky: 10 }[o.type] + o.pos * 4;
       let x = clamp(c.x * 0.4 + slot * wide + (slot === 0 ? (o.pos - 0.5) * 4 : 0), -maxX, maxX);
       if (Math.hypot(x - c.x, z - c.z) < 4.5) x = clamp(c.x + (x >= c.x ? 5 : -5), -maxX, maxX);
       return { x, z };
@@ -665,7 +665,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     }
     for (const p of everyone) { stepMove(p, dt); pose(p, dt); }
     if (ballHolder) {
-      const f = feet(ballHolder, 1.0);
+      const f = feet(ballHolder, 0.8);
       if (ballHolder.anim === 'run') { ball.rotation.x -= dt * ballHolder.speed / BALL_R; f.y += Math.abs(Math.sin(time * 14)) * 0.04; }
       ball.position.lerp(f, 1 - Math.exp(-dt * 22));
     }
@@ -675,7 +675,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       m.sp.visible = m.ring.visible = lanes[i].visible = on;
       m.hit.position.set(r.pos.x, 2.2, r.pos.z);
       if (!on) return;
-      m.sp.position.set(r.pos.x + 0.5, 4.2 + Math.sin(time * 3 + i) * 0.12, r.pos.z);
+      m.sp.position.set(r.pos.x + 0.5, 3.3 + Math.sin(time * 3 + i) * 0.12, r.pos.z);
       m.ring.position.set(r.pos.x, 0.03, r.pos.z);
       m.ring.scale.setScalar(1 + Math.sin(time * 4 + i) * 0.08);
       const pa = lanes[i].geometry.attributes.position;
@@ -693,8 +693,8 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     focus.z += (fz - focus.z) * follow;
     // steep camera looking down the pitch (about 62° from the ground), far away with a narrow lens
     const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 1.08;
-    const D = Math.max(((portrait ? 30 : 21) * Math.sin(tilt)) / (2 * tanH), 29 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
-    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 5 + D * Math.cos(tilt));
+    const D = Math.max(((portrait ? 54 : 40) * Math.sin(tilt)) / (2 * tanH), 36 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
+    const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 9 + D * Math.cos(tilt));
     if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * (camFast ? 9 : 3.5)));
     shake = Math.max(0, shake - dt);
     camera.position.copy(camPos);
