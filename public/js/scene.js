@@ -437,7 +437,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
   let receivers = [attackers[1], attackers[2], attackers[3]];
   let options = [];
   const focus = new THREE.Vector3(0, 0, START.z);
-  let shake = 0, zoom = 0, focusLock = null;
+  let shake = 0, zoom = 0, focusLock = null, camFast = false;
 
   /* tweens */
   const tweens = [];
@@ -514,7 +514,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     focus.set(START.x, 0, START.z);
     markersOn = options.length > 0; shotOn = !!round?.shot;
     goal.backNet.position.z = -2; goal.backNet.scale.set(1, 1, 1);
-    zoom = 0; focusLock = null;
+    zoom = 0; focusLock = null; camFast = false;
   }
 
   function layout(round) {
@@ -578,7 +578,7 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     const tx = savedOrWide === 'wide' ? side * 5.4 : side * 2.9, ty = savedOrWide === 'wide' ? 1.6 : 0.5 + Math.random() * 1.5;
     keeper.diveSide = savedOrWide === 'goal' ? -side : side;
     keeper.diveReach = savedOrWide === 'save' ? Math.abs(tx - keeper.pos.x) - 0.3 : 2.3;
-    zoom = 1; focusLock = { x: carrier.pos.x * 0.45, z: Math.max(GOAL_Z + 10, lerp(carrier.pos.z, GOAL_Z, 0.45)) };
+    zoom = 0.6; focusLock = null; camFast = true; // the camera chases the ball to the goal
     const diveStart = savedOrWide === 'save' ? 0.35 : 0.5;
     tween(dur * (1 - diveStart) + 0.25, (u) => { keeper.dive = u; }).then(() => {});
     if (savedOrWide === 'goal') {
@@ -590,7 +590,9 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
       attackers.forEach((p, n) => { p.target = null; p.rest = 'celebrate'; p.anim = 'celebrate'; if (p !== carrier) runTo(p, carrier.pos.x + (n - 1.5) * 1.6, carrier.pos.z + 1.2, 8.5, 'celebrate'); });
       defenders.forEach((p) => { p.target = null; p.rest = p.anim = 'sad'; });
       tween(1.2, (u) => { ball.position.y = Math.max(BALL_R, 0.3 * (1 - u)); });
-      await wait(1.5);
+      await wait(0.9);
+      camFast = false; zoom = 0; focusLock = { x: carrier.pos.x * 0.8, z: carrier.pos.z }; // pan back to the celebration
+      await wait(1.6);
     } else {
       if (savedOrWide === 'save') {
         const hitAt = new THREE.Vector3(tx, ty, GOAL_Z + 0.9);
@@ -686,13 +688,14 @@ export function createScene(container, { onPick, sfx = {} } = {}) {
     halo.position.set(ball.position.x, 0.025, ball.position.z);
     // camera follows the ball from behind
     const fz = focusLock ? focusLock.z : clamp(ball.position.z, GOAL_Z + 5, 4), fx = focusLock ? focusLock.x : ball.position.x * 0.8;
-    focus.x += (fx - focus.x) * (1 - Math.exp(-dt * 2.5));
-    focus.z += (fz - focus.z) * (1 - Math.exp(-dt * 2.5));
+    const follow = 1 - Math.exp(-dt * (camFast ? 8 : 2.5));
+    focus.x += (fx - focus.x) * follow;
+    focus.z += (fz - focus.z) * follow;
     // steep camera looking down the pitch (about 62° from the ground), far away with a narrow lens
     const tanH = Math.tan((camera.fov * Math.PI) / 360), tilt = 1.08;
-    const D = Math.max(((portrait ? 30 : 21) * Math.sin(tilt)) / (2 * tanH), 26 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
+    const D = Math.max(((portrait ? 30 : 21) * Math.sin(tilt)) / (2 * tanH), 29 / (2 * tanH * camera.aspect)) * (1 - zoom * 0.14);
     const want = new THREE.Vector3(focus.x * 0.85, D * Math.sin(tilt), focus.z - 5 + D * Math.cos(tilt));
-    if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * 3.5));
+    if (!camReady) { camPos.copy(want); camReady = true; } else camPos.lerp(want, 1 - Math.exp(-dt * (camFast ? 9 : 3.5)));
     shake = Math.max(0, shake - dt);
     camera.position.copy(camPos);
     if (shake > 0) { camera.position.x += (Math.random() - 0.5) * shake * 0.5; camera.position.y += (Math.random() - 0.5) * shake * 0.5; }
