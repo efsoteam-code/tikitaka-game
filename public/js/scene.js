@@ -7,7 +7,7 @@ import { GOAL_Z, canvasTex, buildSky, buildPitch, buildStadium, buildGoal, build
 
 const BOX_Z = -44;           // passes never go deeper than this (+ a little)
 const START = { x: 0, z: -22 }; // the move starts 28 m from goal, just outside the box
-const COLORS = { safe: '#4fd1ff', standard: '#7c9cff', risky: '#ffb347', shot: '#ff5d73' };
+const COLORS = { safe: '#b6f24a', standard: '#ffd84a', risky: '#ff9838', shot: '#ff4d5e' }; // same as the option cards
 const TYPES = ['safe', 'standard', 'risky'];
 const BALL_R = 0.21;
 
@@ -77,10 +77,10 @@ export async function createScene(container, { onPick, sfx = {} } = {}) {
   const drawBadge = (g, label, text, color) => {
     g.clearRect(0, 0, 256, 160);
     g.beginPath(); g.roundRect(8, 8, 240, 104, 52); g.moveTo(108, 110); g.lineTo(128, 150); g.lineTo(148, 110); g.closePath();
-    g.fillStyle = 'rgba(8,18,32,.94)'; g.fill();
+    g.fillStyle = 'rgba(10,15,11,.94)'; g.fill();
     g.lineWidth = 7; g.strokeStyle = color; g.lineJoin = 'round'; g.beginPath(); g.roundRect(8, 8, 240, 104, 52); g.stroke();
     g.fillStyle = color; g.beginPath(); g.arc(60, 60, 38, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#06101f'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 50px system-ui, sans-serif'; g.fillText(label, 60, 63);
+    g.fillStyle = '#06140a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 50px system-ui, sans-serif'; g.fillText(label, 60, 63);
     g.fillStyle = '#fff'; g.font = `800 ${text.length > 4 ? 36 : 44}px system-ui, sans-serif`; g.fillText(text, 172, 63);
   };
   const makeBadge = (color) => {

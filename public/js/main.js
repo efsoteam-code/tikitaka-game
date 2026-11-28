@@ -219,7 +219,7 @@ function wire() {
   });
   $('soundBtn').addEventListener('click', () => {
     sfx.setMuted(!sfx.muted);
-    $('soundBtn').textContent = sfx.muted ? '🔇' : '🔊'; $('soundBtn').classList.toggle('off', sfx.muted);
+    $('soundBtn').classList.toggle('off', sfx.muted); $('soundBtn').setAttribute('aria-pressed', String(!sfx.muted));
   });
   const fillFair = () => {
     $('fHash').value = state.serverSeedHash; $('fClient').value = state.clientSeed; $('fNonce').value = state.nonce;

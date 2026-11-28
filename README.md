@@ -53,6 +53,7 @@ public/            the game: index.html, styles.css, js/main.js (UI), js/api.js,
 public/js/scene.js    3D match view: camera, markers, how each pass / shot plays out
 public/js/players.js  rigged player model, team kits (shader), animations
 public/js/stadium.js  pitch, stands, floodlights, goal, ball
+public/fonts/      Barlow and Barlow Condensed (SIL Open Font License)
 public/assets/     player model, hair and animation clips (CC0, see CREDITS.md)
 public/vendor/     Three.js
 tools/             build-assets.mjs — how the files in public/assets were made from the originals

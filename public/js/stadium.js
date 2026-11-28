@@ -134,9 +134,9 @@ export function buildStadium(scene) {
 
   // LED boards around the pitch (the text scrolls)
   const led = canvasTex(1024, 64, (g, w, h) => {
-    g.fillStyle = '#06101f'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#070b08'; g.fillRect(0, 0, w, h);
     g.font = '900 40px system-ui, sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'center';
-    const words = [['TIKI TAKA', '#4fd1ff'], ['PASS', '#ffffff'], ['SHOOT', '#ff5d73'], ['WIN', '#ffb347']];
+    const words = [['TIKI TAKA', '#ffffff'], ['PASS', '#b6f24a'], ['SHOOT', '#ff4d5e'], ['WIN', '#ffc531']];
     words.forEach(([text, c], i) => { g.fillStyle = c; g.shadowColor = c; g.shadowBlur = 12; g.fillText(text, (i + 0.5) * (w / 4), h / 2 + 2); });
   });
   led.wrapS = THREE.RepeatWrapping;
