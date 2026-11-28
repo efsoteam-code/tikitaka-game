@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "public/styles.css"
+        ],
+        "createdAt": "2026-11-28T09:20:09.747Z",
+        "reason": "Claude decided: the flagged rule is the 3px inset bottom edge on the Cash out button, a pressed-key depth edge on a solid button, not an accent bar on a card"
+      }
+    ]
+  }
+}
